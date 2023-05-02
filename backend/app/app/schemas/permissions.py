@@ -31,3 +31,19 @@ class Binding(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class SimpleUser(BaseModel):
+    id: int
+    email: str
+
+    class Config:
+        orm_mode = True
+
+
+class DetailedUserRoleBinding(BaseModel):
+    user: SimpleUser
+    role: Role
+
+    class Config:
+        orm_mode = True

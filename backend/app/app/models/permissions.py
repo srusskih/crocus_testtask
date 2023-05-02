@@ -22,3 +22,4 @@ class Bindings(Base):
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True, index=True)
     role_id = Column(Integer, ForeignKey("role.id", ondelete="CASCADE"), primary_key=True)
     role = relationship("Role")
+    user = relationship("User")

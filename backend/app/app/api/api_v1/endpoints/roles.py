@@ -5,7 +5,7 @@ from typing import List, Any
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, exc
 from app.api import deps
 from app.schemas import user as user_schemas
 from app.schemas import permissions as schemas
@@ -34,11 +34,8 @@ def create_roles(
         new_role: schemas.RoleCreate,
         _current_user: user_schemas.User = Depends(deps.get_current_active_user)
 ) -> Any:
-    try:
-        role = crud.role.create(db=db, obj_in=new_role)
-        return role
-    except crud.crud_permissions.RoleAlreadyExists as e:
-        raise deps.HTTPException(status_code=409, detail=e.message)
+    role = crud.role.create(db=db, obj_in=new_role)
+    return role
 
 
 @router.get("/{role_id}",
@@ -51,5 +48,5 @@ def read_role_by_id(
 ) -> Any:
     role = crud.role.get(db, id=role_id)
     if not role:
-        raise deps.HTTPException(status_code=404, detail="Role not found")
+        raise exc.NotFound(message="Role not found")
     return role
