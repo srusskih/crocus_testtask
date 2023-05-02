@@ -23,3 +23,4 @@ class Bindings(Base):
     """
     user_id = Column(Integer, ForeignKey("user.id"), primary_key=True, index=True)
     role_id = Column(Integer, ForeignKey("role.id"), primary_key=True)
+    role = relationship("Role")
