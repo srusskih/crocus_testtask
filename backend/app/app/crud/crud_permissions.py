@@ -1,15 +1,25 @@
 from typing import Optional, List
-from sqlalchemy.sql.expression import Select
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import IntegrityError
 
 from app.crud.base import CRUDBase
 from app.models import permissions as models
 from app.schemas import permissions as schemas
 
 
-class CRUDRole(CRUDBase[models.Role, schemas.RoleCreate, schemas.RoleUpdate]):
+class RoleAlreadyExists(Exception):
+    message = "Role with this name already exists"
+
+
+class CRUDRole(CRUDBase[models.Role, schemas.RoleCreate, schemas.Role]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[models.Role]:
         return db.query(self.model).filter(self.model.name == name).first()
+
+    def create(self, db: Session, *, obj_in: schemas.RoleCreate) -> models.Role:
+        try:
+            return super().create(db, obj_in=obj_in)
+        except IntegrityError as e:
+            raise RoleAlreadyExists from e
 
 
 class CRUDBinding(CRUDBase[models.Bindings, schemas.Binding, schemas.Binding]):

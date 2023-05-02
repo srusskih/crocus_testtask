@@ -1,22 +1,24 @@
-from typing import List
+from typing import List, TypeVar
 
 from pydantic import BaseModel
+
+Permissions = List[str]
 
 
 class RoleCreate(BaseModel):
     """Schema for creating a role"""
     name: str
-    permissions: List[str]
+    permissions: Permissions
 
     class Config:
         orm_mode = True
 
 
-class RoleUpdate(BaseModel):
+class Role(BaseModel):
     """Schema to read the role(s)"""
     id : int
     name: str
-    permissions: List[str]
+    permissions: Permissions
 
     class Config:
         orm_mode = True

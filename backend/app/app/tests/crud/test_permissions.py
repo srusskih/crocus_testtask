@@ -5,14 +5,8 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.schemas.permissions import RoleCreate, Binding
-from app.tests.utils.user import create_random_user
+from app.tests.utils.user import create_random_user, create_random_role
 from app.tests.utils.utils import random_lower_string
-
-
-def create_random_role(db):
-    role_in = RoleCreate(name=random_lower_string(), permissions=[])
-    role = crud.role.create(db=db, obj_in=role_in)
-    return role
 
 
 @pytest.mark.parametrize("permissions",
