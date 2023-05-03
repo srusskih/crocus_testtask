@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,7 +10,9 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Item])
+@router.get("/",
+            dependencies=[Depends(partial(deps.has_permissions, ["items:read"]))],
+            response_model=List[schemas.Item])
 def read_items(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -28,7 +31,9 @@ def read_items(
     return items
 
 
-@router.post("/", response_model=schemas.Item)
+@router.post("/",
+             dependencies=[Depends(partial(deps.has_permissions, ["items:write"]))],
+             response_model=schemas.Item)
 def create_item(
     *,
     db: Session = Depends(deps.get_db),
@@ -42,7 +47,9 @@ def create_item(
     return item
 
 
-@router.put("/{id}", response_model=schemas.Item)
+@router.put("/{id}",
+            dependencies=[Depends(partial(deps.has_permissions, ["items:write"]))],
+            response_model=schemas.Item)
 def update_item(
     *,
     db: Session = Depends(deps.get_db),
@@ -62,7 +69,9 @@ def update_item(
     return item
 
 
-@router.get("/{id}", response_model=schemas.Item)
+@router.get("/{id}",
+            dependencies=[Depends(partial(deps.has_permissions, ["items:read"]))],
+            response_model=schemas.Item)
 def read_item(
     *,
     db: Session = Depends(deps.get_db),
@@ -80,7 +89,9 @@ def read_item(
     return item
 
 
-@router.delete("/{id}", response_model=schemas.Item)
+@router.delete("/{id}",
+               dependencies=[Depends(partial(deps.has_permissions, ["items:write"]))],
+               response_model=schemas.Item)
 def delete_item(
     *,
     db: Session = Depends(deps.get_db),

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.core.config import settings
 from app.models.user import User
+from app.schemas.permissions import RoleCreate, Binding, Permissions
 from app.schemas.user import UserCreate, UserUpdate
 from app.tests.utils.utils import random_email, random_lower_string
 
@@ -30,6 +31,14 @@ def create_random_user(db: Session) -> User:
     return user
 
 
+def create_superuser(db: Session) -> User:
+    email = random_email()
+    password = random_lower_string()
+    user_in = UserCreate(username=email, email=email, password=password, is_superuser=True)
+    user = crud.user.create(db=db, obj_in=user_in)
+    return user
+
+
 def authentication_token_from_email(
     *, client: TestClient, email: str, db: Session
 ) -> Dict[str, str]:
@@ -48,3 +57,15 @@ def authentication_token_from_email(
         user = crud.user.update(db, db_obj=user, obj_in=user_in_update)
 
     return user_authentication_headers(client=client, email=email, password=password)
+
+
+def create_random_role(db: Session, permissions: Permissions = None):
+    role_in = RoleCreate(name=random_lower_string(), permissions=permissions or [])
+    role = crud.role.create(db=db, obj_in=role_in)
+    return role
+
+
+def bind_role_with_permissions(db: Session, user: User, permissions: Permissions):
+    role = create_random_role(db, permissions=permissions)
+    crud.user_role_binding.create(db, obj_in=Binding(user_id=user.id, role_id=role.id))
+    return role

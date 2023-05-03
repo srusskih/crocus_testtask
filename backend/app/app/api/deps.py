@@ -1,4 +1,5 @@
-from typing import Generator
+from itertools import chain
+from typing import Generator, Sequence
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -10,6 +11,7 @@ from app import crud, models, schemas
 from app.core import security
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.schemas.permissions import Permissions
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -25,7 +27,7 @@ def get_db() -> Generator:
 
 
 def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
+        db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
 ) -> models.User:
     try:
         payload = jwt.decode(
@@ -44,7 +46,7 @@ def get_current_user(
 
 
 def get_current_active_user(
-    current_user: models.User = Depends(get_current_user),
+        current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not crud.user.is_active(current_user):
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -52,10 +54,33 @@ def get_current_active_user(
 
 
 def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
+        current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not crud.user.is_superuser(current_user):
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+def has_permissions(
+        permissions: Permissions,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+) -> bool:
+    """Raise an exception if the user doesn't have enough permissions.
+
+    NOTE: Superuser has all permissions
+    """
+    if crud.user.is_superuser(current_user):
+        return True
+
+    user_permissions = chain.from_iterable([
+        b.role.permissions
+        for b in crud.user_role_binding.find_for_user(db, user_id=current_user.id)
+    ])
+
+    if set(user_permissions).issuperset(permissions):
+        return True
+
+    raise HTTPException(status_code=403, detail="Not enough permissions")
