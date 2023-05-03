@@ -18,6 +18,15 @@ class CRUDRole(CRUDBase[models.Role, schemas.RoleCreate, schemas.Role]):
         except IntegrityError as e:
             raise exc.Conflict("Role with this name already exists") from e
 
+    def remove(self, db: Session, *, id: int) -> models.Role:
+        try:
+            obj = db.query(self.model).filter(self.model.id == id).one()
+        except NoResultFound as e:
+            raise exc.NotFound("Role not found") from e
+        db.delete(obj)
+        db.commit()
+        return obj
+
 
 class CRUDBinding(CRUDBase[models.Bindings, schemas.Binding, schemas.Binding]):
 

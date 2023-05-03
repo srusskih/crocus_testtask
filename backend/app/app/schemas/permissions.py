@@ -24,6 +24,10 @@ class Role(BaseModel):
         orm_mode = True
 
 
+class RoleDeleted(BaseModel):
+    id : int
+
+
 class Binding(BaseModel):
     """Schema for binding a role to a user"""
     role_id: int

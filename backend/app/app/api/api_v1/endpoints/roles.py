@@ -50,3 +50,15 @@ def read_role_by_id(
     if not role:
         raise exc.NotFound(message="Role not found")
     return role
+
+
+@router.delete("/{role_id}",
+               dependencies=[Depends(partial(deps.has_permissions, ["roles:write"]))],
+               response_model=schemas.Role)
+def delete_role_by_id(
+        *,
+        db: Session = Depends(deps.get_db),
+        role_id: int
+) -> Any:
+    role = crud.role.remove(db, id=role_id)
+    return schemas.Role(id=role.id, name=role.name, permissions=role.permissions).dict()
